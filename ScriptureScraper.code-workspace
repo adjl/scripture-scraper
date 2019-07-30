@@ -1,0 +1,9 @@
+{
+	"folders": [{
+		"path": "."
+	}],
+	"settings": {
+		"python.pythonPath": "/home/adjl/.local/share/virtualenvs/ScriptureScraper-gRdildUh/bin/python",
+		"terminal.integrated.cwd": "."
+	}
+}
