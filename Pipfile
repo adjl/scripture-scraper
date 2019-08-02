@@ -8,17 +8,16 @@ autopep8 = "*"
 bandit = "*"
 hypothesis = "*"
 isort = "*"
-mypy = "*"
 pep8 = "*"
 prospector = "*"
 pydocstyle = "*"
 pylama = "*"
 pylint = "*"
 pytest = "*"
-# yapf = "*"
 
 [packages]
-# bottle = "*"
+beautifulsoup4 = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"

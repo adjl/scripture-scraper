@@ -3,6 +3,7 @@
 		"path": "."
 	}],
 	"settings": {
+		"python.linting.mypyEnabled": false,
 		"python.pythonPath": "/home/adjl/.local/share/virtualenvs/ScriptureScraper-gRdildUh/bin/python",
 		"terminal.integrated.cwd": "."
 	}
