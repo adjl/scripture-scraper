@@ -29,7 +29,7 @@ def main():
     book, chapter_groups = sys.argv[1], sys.argv[2:]
     headings = (extract_headings(book, start, end)
                 for start, end in pairwise(chapter_groups))
-    headings = reduce(lambda x, y: tuple(list(x) + list(y)), headings)
+    headings = reduce(lambda x, y: tuple(list(x) + list(y)), headings, ())
     headings_filepath = ''.join(('headings/', book, '.json'))
     with open(headings_filepath, 'w') as headings_file:
         headings_file.write(json.dumps(headings, ensure_ascii=False, indent=4))
