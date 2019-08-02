@@ -82,7 +82,7 @@ def group(n):
 def main():
     book, chapters = sys.argv[1], int(sys.argv[2])
     headings = (extract_headings(book, start, end) for start, end in group(chapters))
-    headings = (reduce(lambda x, y: x + list(y), headings, []))
+    headings = reduce(lambda x, y: x + list(y), headings, [])
     file_io('headings', book, 'w', json.dumps(headings, ensure_ascii=False, indent=4))
     text = ' '.join(transform(text) for text in extract(book, chapters))
     file_io('output', book, 'w', text)
