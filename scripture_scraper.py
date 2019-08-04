@@ -16,8 +16,9 @@ site_url = 'https://www.biblegateway.com/passage/?search={}+{}-{}&version=NKJV'
 api_url = 'https://agile-scrubland-2714.herokuapp.com/passage/NKJV/{}/{}'
 
 re = {
+    'quote_gap': re.compile(r'([“‘’”])\s([“‘’”])\s?([“‘’”])?'),
     'note_mark': re.compile(r'\[[a-z]+\]'),
-    'sentence_end': re.compile(r'[.?!](”)?$'),
+    'sentence_end': re.compile(r'[.?!][’”]*$'),
     'quote_start': re.compile(r'^“'),
     'em_dash': re.compile(r'—\s+'),
     'extra_space': re.compile(r'\s{2,}')
@@ -43,8 +44,8 @@ def extract(book, chapters):
 
 
 def transform(text):
-    def remove_note_marks(line):
-        return re['note_mark'].sub('', line)
+    def clean_string(line):
+        return re['quote_gap'].sub(r'\1\2\3', re['note_mark'].sub('', line))
 
     def is_sentence_end(line):
         return re['sentence_end'].search(line)
@@ -58,9 +59,9 @@ def transform(text):
     def fix_spacing(line):
         return re['extra_space'].sub(' ', re['em_dash'].sub('—', line))
 
-    text[0] = remove_note_marks(text[0]).strip()
+    text[0] = clean_string(text[0]).strip()
     for i in range(1, len(text)):
-        text[i] = remove_note_marks(text[i]).strip()
+        text[i] = clean_string(text[i]).strip()
         if not is_sentence_end(text[i - 1]) and not is_quote_start(text[i]):
             text[i] = to_lower(text[i])
     return fix_spacing(' '.join(text))
