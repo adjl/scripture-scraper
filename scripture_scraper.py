@@ -80,8 +80,7 @@ def group(n):
         yield (i, min(i + n // 3, n))
 
 
-def main():
-    book, chapters = sys.argv[1], int(sys.argv[2])
+def main(book, chapters):
     headings = (extract_headings(book, start, end) for start, end in group(chapters))
     headings = reduce(lambda x, y: x + list(y), headings, [])
     file_io('headings', book, 'w', json.dumps(headings, ensure_ascii=False, indent=4))
@@ -90,7 +89,8 @@ def main():
 
 
 if __name__ == '__main__':
+    book, chapters = sys.argv[1], int(sys.argv[2])
     try:
-        main()
+        main(book, chapters)
     except (KeyboardInterrupt, EOFError):
         sys.exit()
