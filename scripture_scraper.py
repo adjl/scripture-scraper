@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import re
 import sys
 import time
@@ -68,7 +69,10 @@ def transform(text):
 
 
 def file_io(wdir, name, mode, s=None):
-    path = ''.join((wdir, '/', name, '.json' if wdir == 'headings' else '.txt'))
+    path = ''.join((wdir, '/'))
+    if not os.path.isdir(path):
+        os.mkdir(path, mode=0o775)
+    path = ''.join((path, name, '.json' if wdir == 'headings' else '.txt'))
     with open(path, mode) as file:
         if mode == 'w':
             return file.write(s)
