@@ -95,7 +95,9 @@ def main(book, version, chapters):
 
 
 if __name__ == '__main__':
-    book, version, chapters = sys.argv[1], sys.argv[2], int(sys.argv[3])
+    book = input('Book to obtain (ensure correct spelling and capitalisation): ')
+    version = input('Translation abbreviation (e.g., NKJV): ').upper()
+    chapters = int(input('No. of chapters in {} (e.g., 21 in John): '.format(book)))
     try:
         main(book, version, chapters)
     except (KeyboardInterrupt, EOFError):
