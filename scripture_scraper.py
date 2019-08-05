@@ -13,8 +13,8 @@ import requests
 from bs4 import BeautifulSoup
 
 
-site_url = 'https://www.biblegateway.com/passage/?search={}+{}-{}&version=NKJV'
-api_url = 'https://agile-scrubland-2714.herokuapp.com/passage/NKJV/{}/{}'
+site_url = 'https://www.biblegateway.com/passage/?search={}+{}-{}&version={}'
+api_url = 'https://agile-scrubland-2714.herokuapp.com/passage/{}/{}/{}'
 
 re = {
     'quote_gap': re.compile(r'([“‘’”])\s([“‘’”])\s?([“‘’”])?'),
@@ -26,22 +26,22 @@ re = {
 }
 
 
-def extract_headings(book, start, end):
+def extract_headings(book, version, start, end):
     time.sleep(1.0)
     html = BeautifulSoup(
-        requests.get(site_url.format(book, start, end)).text, 'html.parser')
+        requests.get(site_url.format(book, start, end, version)).text, 'html.parser')
     return (heading.get_text(strip=True) for heading in html.find_all('h3'))
 
 
-def extract(book, chapters):
-    def extract_text(book, chapter):
+def extract(book, version, chapters):
+    def extract_text(book, version, chapter):
         time.sleep(1.0)
-        response = json.loads(requests.get(api_url.format(book, chapter)).text)
+        response = json.loads(requests.get(api_url.format(version, book, chapter)).text)
         lines = (line for verse in response['verses'] for line in verse['lines'])
         return [line['text'] for line in lines if line['text'] not in headings]
 
-    headings = set(json.loads(file_io('headings', book, 'r')))
-    return (extract_text(book, chapter + 1) for chapter in range(chapters))
+    headings = set(json.loads(file_io('headings', version, book, 'r')))
+    return (extract_text(book, version, chapter + 1) for chapter in range(chapters))
 
 
 def transform(text):
@@ -68,14 +68,14 @@ def transform(text):
     return fix_spacing(' '.join(text))
 
 
-def file_io(wdir, name, mode, s=None):
-    path = ''.join((wdir, '/'))
+def file_io(path, version, book, mode, output=None):
+    path = ''.join((path, '/', version, '/'))
     if not os.path.isdir(path):
         os.mkdir(path, mode=0o775)
-    path = ''.join((path, name, '.json' if wdir == 'headings' else '.txt'))
+    path = ''.join((path, book, '.json' if path.startswith('headings') else '.txt'))
     with open(path, mode) as file:
         if mode == 'w':
-            return file.write(s)
+            return file.write(output)
         return file.read()
 
 
@@ -84,17 +84,19 @@ def group(n):
         yield (i, min(i + n // 3, n))
 
 
-def main(book, chapters):
-    headings = (extract_headings(book, start, end) for start, end in group(chapters))
+def main(book, version, chapters):
+    headings = (
+        extract_headings(book, version, start, end) for start, end in group(chapters))
     headings = reduce(lambda x, y: x + list(y), headings, [])
-    file_io('headings', book, 'w', json.dumps(headings, ensure_ascii=False, indent=4))
-    text = ' '.join(transform(text) for text in extract(book, chapters))
-    file_io('output', book, 'w', text)
+    file_io('headings', version, book, 'w',
+            json.dumps(headings, ensure_ascii=False, indent=4))
+    text = ' '.join(transform(text) for text in extract(book, version, chapters))
+    file_io('output', version, book, 'w', text)
 
 
 if __name__ == '__main__':
-    book, chapters = sys.argv[1], int(sys.argv[2])
+    book, version, chapters = sys.argv[1], sys.argv[2], int(sys.argv[3])
     try:
-        main(book, chapters)
+        main(book, version, chapters)
     except (KeyboardInterrupt, EOFError):
         sys.exit()
