@@ -68,15 +68,26 @@ def transform(text):
     return fix_spacing(' '.join(text))
 
 
-def file_io(path, version, book, mode, output=None):
-    path = ''.join((path, '/', version, '/'))
-    if not os.path.isdir(path):
-        os.mkdir(path, mode=0o775)
-    path = ''.join((path, book, '.json' if path.startswith('headings') else '.txt'))
-    with open(path, mode) as file:
+def file_io(wdir, version, book, mode, output=None):
+    dir_path, file_path = get_paths(wdir, version, book)
+    if not os.path.isdir(dir_path):
+        os.mkdir(dir_path, mode=0o775)
+    with open(file_path, mode) as file:
         if mode == 'w':
             return file.write(output)
         return file.read()
+
+
+def to_overwrite_file(wdir, version, book):
+    _, path = get_paths(wdir, version, book)
+    return (not os.path.isfile(path) or
+            input('{} already exists. Overwrite [y/N]? '.format(path)).lower() == 'y')
+
+
+def get_paths(wdir, version, book):
+    dir_path = '/'.join((wdir, version, ''))
+    file_path = ''.join((dir_path, book, '.json' if wdir == 'headings' else '.txt'))
+    return dir_path, file_path
 
 
 def group(n):
@@ -85,13 +96,16 @@ def group(n):
 
 
 def main(book, version, chapters):
-    headings = (
-        extract_headings(book, version, start, end) for start, end in group(chapters))
-    headings = reduce(lambda x, y: x + list(y), headings, [])
-    file_io('headings', version, book, 'w',
-            json.dumps(headings, ensure_ascii=False, indent=4))
-    text = ' '.join(transform(text) for text in extract(book, version, chapters))
-    file_io('output', version, book, 'w', text)
+    if to_overwrite_file('headings', version, book):
+        headings = (extract_headings(book, version, start, end)
+                    for start, end in group(chapters))
+        headings = reduce(lambda x, y: x + list(y), headings, [])
+        file_io('headings', version, book, 'w',
+                json.dumps(headings, ensure_ascii=False, indent=4))
+    if to_overwrite_file('output', version, book):
+        text = ' '.join(
+            transform(text) for text in extract(book, version, chapters))
+        file_io('output', version, book, 'w', text)
 
 
 if __name__ == '__main__':
