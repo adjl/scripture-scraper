@@ -40,7 +40,7 @@ def extract(book, version, chapters):
         lines = (line for verse in response['verses'] for line in verse['lines'])
         return [line['text'] for line in lines if line['text'] not in headings]
 
-    headings = set(json.loads(file_io('headings', version, book, 'r')))
+    headings = set(json.loads(file_io(get_path('headings', version, book), 'r')))
     return (extract_text(book, version, chapter + 1) for chapter in range(chapters))
 
 
@@ -68,8 +68,8 @@ def transform(text):
     return fix_spacing(' '.join(text))
 
 
-def file_io(wdir, version, book, mode, output=None):
-    dir_path, file_path = get_paths(wdir, version, book)
+def file_io(file_path, mode, output=None):
+    dir_path = file_path[:file_path.rindex('/') + 1]
     if not os.path.isdir(dir_path):
         os.mkdir(dir_path, mode=0o775)
     with open(file_path, mode) as file:
@@ -78,16 +78,14 @@ def file_io(wdir, version, book, mode, output=None):
         return file.read()
 
 
-def to_overwrite_file(wdir, version, book):
-    _, path = get_paths(wdir, version, book)
+def to_write_file(path):
     return (not os.path.isfile(path) or
             input('{} already exists. Overwrite [y/N]? '.format(path)).lower() == 'y')
 
 
-def get_paths(wdir, version, book):
-    dir_path = '/'.join((wdir, version, ''))
-    file_path = ''.join((dir_path, book, '.json' if wdir == 'headings' else '.txt'))
-    return dir_path, file_path
+def get_path(wdir, version, book):
+    path = '/'.join((wdir, version, ''))
+    return ''.join((path, book, '.json' if wdir == 'headings' else '.txt'))
 
 
 def group(n):
@@ -96,16 +94,18 @@ def group(n):
 
 
 def main(book, version, chapters):
-    if to_overwrite_file('headings', version, book):
+    headings_file = get_path('headings', version, book)
+    if to_write_file(headings_file):
         headings = (extract_headings(book, version, start, end)
                     for start, end in group(chapters))
         headings = reduce(lambda x, y: x + list(y), headings, [])
-        file_io('headings', version, book, 'w',
-                json.dumps(headings, ensure_ascii=False, indent=4))
-    if to_overwrite_file('output', version, book):
+        file_io(headings_file, 'w', json.dumps(headings, ensure_ascii=False, indent=4))
+
+    output_file = get_path('output', version, book)
+    if to_write_file(output_file):
         text = ' '.join(
             transform(text) for text in extract(book, version, chapters))
-        file_io('output', version, book, 'w', text)
+        file_io(output_file, 'w', text)
 
 
 if __name__ == '__main__':
