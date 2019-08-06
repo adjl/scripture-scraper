@@ -36,6 +36,7 @@ def extract_headings(book, version, start, end):
 def extract(book, version, chapters):
     def extract_text(book, version, chapter):
         time.sleep(1.0)
+        print('Extracting Chapter {} of {} {} ...'.format(chapter, book, version))
         response = json.loads(requests.get(api_url.format(version, book, chapter)).text)
         lines = (line for verse in response['verses'] for line in verse['lines'])
         return [line['text'] for line in lines if line['text'] not in headings]
@@ -71,9 +72,11 @@ def transform(text):
 def file_io(file_path, mode, output=None):
     dir_path = file_path[:file_path.rindex('/') + 1]
     if not os.path.isdir(dir_path):
+        print('{} does not exist. Creating directory ...'.format(dir_path))
         os.mkdir(dir_path, mode=0o775)
     with open(file_path, mode) as file:
         if mode == 'w':
+            print('Writing to {} ...'.format(file_path))
             return file.write(output)
         return file.read()
 
@@ -94,12 +97,11 @@ def group(n):
 
 
 def main(book, version, chapters):
-    headings_file = get_path('headings', version, book)
-    if to_write_file(headings_file):
-        headings = (extract_headings(book, version, start, end)
-                    for start, end in group(chapters))
-        headings = reduce(lambda x, y: x + list(y), headings, [])
-        file_io(headings_file, 'w', json.dumps(headings, ensure_ascii=False, indent=4))
+    headings = (extract_headings(book, version, start, end)
+                for start, end in group(chapters))
+    headings = reduce(lambda x, y: x + list(y), headings, [])
+    file_io(get_path('headings', version, book), 'w',
+            json.dumps(headings, ensure_ascii=False, indent=4))
 
     output_file = get_path('output', version, book)
     if to_write_file(output_file):
@@ -107,12 +109,16 @@ def main(book, version, chapters):
             transform(text) for text in extract(book, version, chapters))
         file_io(output_file, 'w', text)
 
+    print('Complete text written to {}. Done.'.format(output_file))
+
 
 if __name__ == '__main__':
-    book = input('Book to obtain (ensure correct spelling and capitalisation): ')
-    version = input('Translation abbreviation (e.g., NKJV): ').upper()
-    chapters = int(input('No. of chapters in {} (e.g., 21 in John): '.format(book)))
+    program_name = 'ScriptureScraper v0.1'
+    print('{}\n{}'.format(program_name, '-' * len(program_name)))
     try:
+        book = input('Book (ensure correct spelling, capitalisation; e.g., Job): ')
+        version = input('Translation abbreviation (e.g., NKJV): ').upper()
+        chapters = int(input('No. of chapters in {} (e.g., 21 in John): '.format(book)))
         main(book, version, chapters)
     except (KeyboardInterrupt, EOFError):
         sys.exit()
