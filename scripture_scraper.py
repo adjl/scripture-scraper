@@ -68,11 +68,11 @@ def transform(text):
     return fix_spacing(' '.join(text))
 
 
-def file_io(path, version, book, mode, output=None):
-    path = ''.join((path, '/', version, '/'))
+def file_io(wdir, version, book, mode, output=None):
+    path = '/'.join((wdir, version, ''))
     if not os.path.isdir(path):
         os.mkdir(path, mode=0o775)
-    path = ''.join((path, book, '.json' if path.startswith('headings') else '.txt'))
+    path = ''.join((path, book, '.json' if wdir == 'headings' else '.txt'))
     with open(path, mode) as file:
         if mode == 'w':
             return file.write(output)
@@ -85,8 +85,8 @@ def group(n):
 
 
 def main(book, version, chapters):
-    headings = (
-        extract_headings(book, version, start, end) for start, end in group(chapters))
+    headings = (extract_headings(book, version, start, end)
+                for start, end in group(chapters))
     headings = reduce(lambda x, y: x + list(y), headings, [])
     file_io('headings', version, book, 'w',
             json.dumps(headings, ensure_ascii=False, indent=4))
