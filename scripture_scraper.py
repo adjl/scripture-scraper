@@ -36,6 +36,7 @@ def extract_headings(book, version, start, end):
 def extract(book, version, chapters):
     def extract_text(book, version, chapter):
         time.sleep(1.0)
+        print('Extracting Chapter {} of {} {} ...'.format(chapter, book, version))
         response = json.loads(requests.get(api_url.format(version, book, chapter)).text)
         lines = (line for verse in response['verses'] for line in verse['lines'])
         return [line['text'] for line in lines if line['text'] not in headings]
