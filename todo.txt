@@ -1,0 +1,8 @@
+- Gap between close-then-open quotation marks
+- Keep proper nouns capitalised at the start of verses
+- Improve book name detection re: spaces, e.g., '1 Thessalonians'
+- *_url formatting, e.g., adding '%20' in '1 Thessalonians'
+- Filename formatting, e.g., removing ' ' in '1 Thessalonians'
+- *.tex templating
+- Specify <book>/<book>.tex output location, e.g., ~/Hacking/DivisionlessBible...
+- Save responses or save result-text HTML
